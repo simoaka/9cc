@@ -60,7 +60,7 @@ bool expect(char *op)
 {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(op, token->str, token->len))
-        error_at(token->str, "expected '%c'.", op);
+        error_at(token->str, "expected \"%s\".", op);
     token = token->next;
 }
 
@@ -120,8 +120,10 @@ Token *tokenize(void)
         }
 
         if (isdigit(*p)) {
-            cur = new_token(TK_NUM, cur, p, 1);
+            cur = new_token(TK_NUM, cur, p, 0);
+            char *q = p;
             cur->val = strtol(p, &p, 10);
+            cur->len = p - q;
             continue;
         }
 
