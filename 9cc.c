@@ -18,6 +18,7 @@ struct Token {
     Token       *next;  /* next token */
     int         val;    /* number if kind of token is number. */
     char        *str;   /* token string */
+    int         len;    /* length of str */
 };
 
 /* current token */
@@ -43,9 +44,10 @@ void error_at(char *loc, char *fmt, ...)
 /* if next token is match to expected symbol, go ahead token and return true.
  * otherwise, return false.
  */
-bool consume(char op)
+bool consume(char *op)
 {
-    if (token->kind != TK_RESERVED || token->str[0] != op)
+    if (token->kind != TK_RESERVED || strlen(op) != token->len ||
+        memcmp(op, token->str, token->len))
         return false;
     token = token->next;
     return true;
@@ -54,9 +56,10 @@ bool consume(char op)
 /* if next token is match to expected symbol, go ahead token.
  * otherwise, report error and exit.
  */
-bool expect(char op)
+bool expect(char *op)
 {
-    if (token->kind != TK_RESERVED || token->str[0] != op)
+    if (token->kind != TK_RESERVED || strlen(op) != token->len ||
+        memcmp(op, token->str, token->len))
         error_at(token->str, "expected '%c'.", op);
     token = token->next;
 }
@@ -80,11 +83,12 @@ bool at_eof()
 
 /* create new token and chain  to current token.
  */
-Token *new_token(TokenKind kind, Token *cur, char *str)
+Token *new_token(TokenKind kind, Token *cur, char *str, int len)
 {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
     tok->str = str;
+    tok->len = len;
     cur->next = tok;
     return tok;
 }
@@ -102,14 +106,21 @@ Token *tokenize(void)
             continue;
         }
 
+        if (!strncmp(p, "==", 2) || !strncmp(p, "!=", 2) ||
+            !strncmp(p, "<=", 2) || !strncmp(p, ">=", 2)) {
+            cur = new_token(TK_RESERVED, cur, p, 2);
+            p += 2;
+            continue;
+        }
+
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
-            *p == '(' || *p == ')') {
-            cur = new_token(TK_RESERVED, cur, p++);
+            *p == '(' || *p == ')' || *p == '<' || *p == '>') {
+            cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
 
         if (isdigit(*p)) {
-            cur = new_token(TK_NUM, cur, p);
+            cur = new_token(TK_NUM, cur, p, 1);
             cur->val = strtol(p, &p, 10);
             continue;
         }
@@ -117,22 +128,26 @@ Token *tokenize(void)
         error_at(p, "expected a number.\n");
     }
 
-    new_token(TK_EOF, cur, p);
+    new_token(TK_EOF, cur, p, 0);
     return head.next;
 }
 
 typedef enum {
-    ND_ADD,
-    ND_SUB,
-    ND_MUL,
-    ND_DIV,
-    ND_NUM,
+    ND_ADD, /* + */
+    ND_SUB, /* - */
+    ND_MUL, /* * */
+    ND_DIV, /* / */
+    ND_EQU, /* == */
+    ND_NEQ, /* != */
+    ND_LES, /* <  */
+    ND_LEQ, /* <= */
+    ND_NUM, /* number */
 } NodeKind;
 
 typedef struct Node Node;
 
 struct Node {
-    NodeKind    kind;
+    NodeKind    kind; /* kine of token */
     Node        *lhs; /* left hand side */
     Node        *rhs; /* right hand side */
     int         val;  /* it will be used when kind is number */
@@ -162,20 +177,70 @@ Node *new_num(int val)
     return node;
 }
 
+/* 1. == !=
+ * 2. < <= > >=
+ * 3. + -
+ * 4. * /
+ * 5. +(unary) -(unary)
+ * 6. ()
+ */
 Node *expr();
+Node *equality();
+Node *relational();
+Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
 
-/* EBNF: expr = mul ("+" mul | "-" mul)* */
+/* EBNF: expr = equality */
 Node *expr()
+{
+    return equality();
+}
+
+/* EBNF: equality = rerational ("==" relational | "!=" relational)* */
+Node *equality()
+{
+    Node *node = relational();
+
+    for (;;) {
+        if (consume("=="))
+            node = new_binary(ND_EQU, node, relational());
+        else if (consume("!="))
+            node = new_binary(ND_NEQ, node, relational());
+        else
+            return node;
+    }
+}
+
+/* EBNF: rerational = add ("<" add | "<=" add | ">" add | ">=" add)* */
+Node *relational()
+{
+    Node *node = add();
+
+    for (;;) {
+        if (consume("<"))
+            node = new_binary(ND_LES, node, add());
+        else if (consume("<="))
+            node = new_binary(ND_LEQ, node, add());
+        else if (consume(">"))
+            node = new_binary(ND_LES, add(), node);
+        else if (consume(">="))
+            node = new_binary(ND_LEQ, add(), node);
+        else
+            return node;
+    }
+}
+
+/* EBNF: add = mul ("*" mul | "/" mul)* */
+Node *add()
 {
     Node *node = mul();
 
     for (;;) {
-        if (consume('+'))
+        if (consume("+"))
             node = new_binary(ND_ADD, node, mul());
-        else if (consume('-'))
+        else if (consume("-"))
             node = new_binary(ND_SUB, node, mul());
         else
             return node;
@@ -188,9 +253,9 @@ Node *mul()
     Node *node = unary();
 
     for (;;) {
-        if (consume('*'))
+        if (consume("*"))
             node = new_binary(ND_MUL, node, unary());
-        else if (consume('/'))
+        else if (consume("/"))
             node = new_binary(ND_DIV, node, unary());
         else
             return node;
@@ -200,9 +265,9 @@ Node *mul()
 /* EBNF: unary = ("+" | "-")? primary */
 Node *unary()
 {
-    if (consume('+'))
+    if (consume("+"))
         return unary();
-    else if (consume('-'))
+    else if (consume("-"))
         /* -num = 0-num */
         return new_binary(ND_SUB, new_num(0), unary());
     else
@@ -213,9 +278,9 @@ Node *unary()
 Node *primary()
 {
     /* if next token is "(", expression will be expanded. */
-    if (consume('(')) {
+    if (consume("(")) {
         Node *node = expr();
-        expect(')'); /* expression must be closed with ')' */
+        expect(")"); /* expression must be closed with ')' */
         return node;
     }
 
@@ -248,7 +313,28 @@ void gen(Node *node)
         printf("  cqo\n");
         printf("  idiv rdi\n");
         break;
+    case ND_EQU:
+        printf("  cmp rax, rdi\n");
+        printf("  sete al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_NEQ:
+        printf("  cmp rax, rdi\n");
+        printf("  setne al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_LES:
+        printf("  cmp rax, rdi\n");
+        printf("  setl al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_LEQ:
+        printf("  cmp rax, rdi\n");
+        printf("  setle al\n");
+        printf("  movzb rax, al\n");
+        break;
     }
+
     printf("  push rax\n");
 }
 
