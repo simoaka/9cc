@@ -214,7 +214,7 @@ void gen(Node *node)
         printf("  imul rax, rdi\n");
         break;
     case ND_DIV:
-        printf("  cpo\n");
+        printf("  cqo\n");
         printf("  idiv rdi\n");
         break;
     }
