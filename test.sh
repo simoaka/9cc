@@ -28,4 +28,20 @@ assert 7 "2+10/2"
 assert 47 '5+6*7'
 assert 15 '5*(9-6)'
 assert 4 '(3+5)/2'
+assert 2 '+(+2)'
+assert 7 '+2+(+5)'
+assert 10 '-10+20'
+assert 30 '+10+20'
+assert 10 '+20-10'
+assert 2 '-(-2)'
+assert 15 '+10-(-5)'
+assert 5 '+10-(+5)'
+assert 5 '+10+(-5)'
+assert 10 '-10+(+20)'
+assert 10 '-10-(-20)'
+assert 10 '+ + +10'
+assert 10 '+ - -10'
+assert 10 '- - +10'
+
+
 echo OK
