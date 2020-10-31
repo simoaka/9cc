@@ -13,18 +13,31 @@ int main(int argc, char **argv)
 
     user_input = argv[1];
     token = tokenize();
-    Node *node = expr();
+    program();
 
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
-    gen(node);
+    /* prologue - prepare memory for 26 variables. */
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n");
 
-    /* total calculated value is stacked at top.
-     * load it and return.
-     */
-    printf("  pop rax\n");
+    int i;
+    for (i = 0; code[i]; i++) {
+        gen(code[i]);
+
+        /* total calculated value is stacked at top.
+         * load it and return.
+         */
+        printf("  pop rax\n");
+    }
+
+    /* epilogue */
+    /* total evaluated value is stored in rax. return rax. */
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
     printf("  ret\n");
     return 0;
 }

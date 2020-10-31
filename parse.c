@@ -13,8 +13,21 @@ static bool consume(char *op)
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(op, token->str, token->len))
         return false;
+
     token = token->next;
     return true;
+}
+
+/* if next token is identifier, go ahead token and return identifier token.
+ * otherwise, return NULL.
+ */
+static Token * consume_ident(void)
+{
+    Token *tok = token;
+    if (tok->kind != TK_IDENT)
+        return NULL;
+    token = token->next;
+    return tok;
 }
 
 /* if next token is match to expected symbol, go ahead token.
@@ -78,14 +91,20 @@ Token *tokenize(void)
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
-            *p == '(' || *p == ')' || *p == '<' || *p == '>') {
+            *p == '(' || *p == ')' || *p == '<' || *p == '>' ||
+            *p == '=' || *p == ';') {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
 
+        if (islower(*p)) {
+            cur = new_token(TK_IDENT, cur, p++, 1);
+            continue;
+        }
+
         if (isdigit(*p)) {
-            cur = new_token(TK_NUM, cur, p, 0);
             char *q = p;
+            cur = new_token(TK_NUM, cur, p, 0);
             cur->val = strtol(p, &p, 10);
             cur->len = p - q;
             continue;
@@ -129,6 +148,9 @@ static Node *new_num(int val)
  * 5. +(unary) -(unary)
  * 6. ()
  */
+static Node *stmt();
+static Node *expr();
+static Node *assign();
 static Node *equality();
 static Node *relational();
 static Node *add();
@@ -136,10 +158,43 @@ static Node *mul();
 static Node *unary();
 static Node *primary();
 
-/* EBNF: expr = equality */
+Node *code[100];
+
+/* EBNF: program = stmt* */
+void *program()
+{
+    int i = 0;
+    while (!at_eof())
+        code[i++] = stmt();
+    code[i] = NULL;
+}
+
+/* EBNF: stmt = expr ";" */
+Node *stmt()
+{
+#if 0
+    /* pending */
+    if (consume(";"))
+        return 0xFFFFFFFF;
+#endif
+    Node *node = expr();
+    expect(";");
+    return node;
+}
+
+/* EBNF: expr = assign */
 Node *expr()
 {
-    return equality();
+    return assign();
+}
+
+/* EBNF: assign = eauality ("=" assign)? */
+Node *assign()
+{
+    Node *node = equality();
+    if (consume("="))
+        node = new_binary(ND_ASSIGN, node, assign());
+    return node;
 }
 
 /* EBNF: equality = rerational ("==" relational | "!=" relational)* */
@@ -225,6 +280,14 @@ static Node *primary()
     if (consume("(")) {
         Node *node = expr();
         expect(")"); /* expression must be closed with ')' */
+        return node;
+    }
+
+    Token *tok = consume_ident();
+    if (tok) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        node->offset = (tok->str[0] - 'a' + 1) * 8;
         return node;
     }
 
