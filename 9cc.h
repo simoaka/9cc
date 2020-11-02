@@ -39,13 +39,23 @@ struct Node {
     int         offset; /* it will be used when kind is local variable */
 };
 
+typedef struct LVar LVar;
+
+struct LVar {
+    LVar    *next;
+    char    *name;
+    int     len;
+    int     offset;
+};
 
 extern char *user_input;
 extern Token *token;
 extern Node *code[100];
+extern LVar *locals;
 
 extern Token *tokenize(void);
 extern void *program();
+extern int count_lvar(void);
 
 extern void gen(Node *node);
 

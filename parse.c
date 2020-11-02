@@ -5,6 +5,26 @@
 #include <string.h>
 #include "9cc.h"
 
+/* return local variables which has the same name as token.
+ * if token is not found, return NULL.
+ */
+static LVar *find_lvar(Token *tok)
+{
+    for (LVar *var = locals; var != NULL; var = var->next)
+        if (var->len == tok->len && !strncmp(var->name, tok->str, var->len))
+            return var;
+    return NULL;
+}
+
+/* return number of local variables */
+int count_lvar(void)
+{
+    int cnt = 0;
+    for (LVar *var = locals; var; var = var->next)
+        cnt++;
+    return cnt;
+}
+
 /* if next token is match to expected symbol, go ahead token and return true.
  * otherwise, return false.
  */
@@ -97,8 +117,12 @@ Token *tokenize(void)
             continue;
         }
 
-        if (islower(*p)) {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+        if (isalpha(*p)) {
+            char *q = p;
+            cur = new_token(TK_IDENT, cur, p, 0);
+            while (isalpha(*p))
+                p++;
+            cur->len = p - q;
             continue;
         }
 
@@ -287,7 +311,19 @@ static Node *primary()
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar) {
+            node->offset = lvar->offset;
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = (locals) ? (locals->offset + 8) : 0;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 

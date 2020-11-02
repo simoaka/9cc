@@ -3,6 +3,7 @@
 
 Token *token;
 char *user_input;
+LVar *locals;
 
 int main(int argc, char **argv)
 {
@@ -22,7 +23,7 @@ int main(int argc, char **argv)
     /* prologue - prepare memory for 26 variables. */
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
+    printf("  sub rsp, %d\n", count_lvar() * 8);
 
     int i;
     for (i = 0; code[i]; i++) {
