@@ -5,6 +5,14 @@
 #include <string.h>
 #include "9cc.h"
 
+/* return true if this character is available for making token string.
+ * return true if it's alphabet, number of under score.
+ */
+static int is_alpha_digit(char c)
+{
+    return (isalpha(c) || isdigit(c) || c == '_');
+}
+
 /* return local variables which has the same name as token.
  * if token is not found, return NULL.
  */
@@ -33,7 +41,17 @@ static bool consume(char *op)
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(op, token->str, token->len))
         return false;
+    token = token->next;
+    return true;
+}
 
+/* if next token is expected keyword, go ahead token and return true.
+ * otherwise, return false.
+ */
+static bool consume_keyword(TokenKind kind)
+{
+    if (token->kind != kind)
+        return false;
     token = token->next;
     return true;
 }
@@ -100,6 +118,12 @@ Token *tokenize(void)
     while (*p) {
         if (isspace(*p)) {
             p++;
+            continue;
+        }
+
+        if (!strncmp(p, "return", 6) && !is_alpha_digit(p[6])) {
+            cur = new_token(TK_RETURN, cur, p, 6);
+            p += 6;
             continue;
         }
 
@@ -193,15 +217,18 @@ void *program()
     code[i] = NULL;
 }
 
-/* EBNF: stmt = expr ";" */
+/* EBNF: stmt = expr ";" | "return" expr ";"
+ * pending - parse isolated ';'
+ */
 Node *stmt()
 {
-#if 0
-    /* pending */
-    if (consume(";"))
-        return 0xFFFFFFFF;
-#endif
-    Node *node = expr();
+    Node *node;
+
+    if (consume_keyword(TK_RETURN))
+        node = new_binary(ND_RETURN, expr(), NULL);
+    else
+        node = expr();
+
     expect(";");
     return node;
 }

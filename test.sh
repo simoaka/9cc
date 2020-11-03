@@ -100,4 +100,9 @@ assert 1 "foo=1;"
 assert 5 "bar=2+3;"
 assert 6 "foo=1; bar=2+3; (foo+bar);"
 
+assert 42 "return 42;"
+assert 5 "return 5; return 8;"
+assert 5 "return(2+3);"
+assert 6 "foo=1;bar=2+3;return (foo+bar);"
+
 echo OK

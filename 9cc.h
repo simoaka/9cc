@@ -1,5 +1,6 @@
 typedef enum {
     TK_RESERVED,    /* symbols */
+    TK_RETURN,      /* return keyword */
     TK_IDENT,       /* identifier */
     TK_NUM,         /* number */
     TK_EOF,         /* end of file */
@@ -26,6 +27,7 @@ typedef enum {
     ND_LEQ,     /* <= */
     ND_ASSIGN,  /* = */
     ND_LVAR,    /* local variable */
+    ND_RETURN,  /* return keyword */
     ND_NUM,     /* number */
 } NodeKind;
 
