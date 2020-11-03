@@ -105,4 +105,8 @@ assert 5 "return 5; return 8;"
 assert 5 "return(2+3);"
 assert 6 "foo=1;bar=2+3;return (foo+bar);"
 
+assert 1 "_Foo = 1;"
+assert 5 "Bar_ = 2+3;"
+assert 8 "foo_bar = 3+5;"
+assert 13 "fn1=5; fn2=3+5; return (fn1+fn2);"
 echo OK

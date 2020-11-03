@@ -141,10 +141,10 @@ Token *tokenize(void)
             continue;
         }
 
-        if (isalpha(*p)) {
+        if (isalpha(*p) || (*p == '_')) {
             char *q = p;
             cur = new_token(TK_IDENT, cur, p, 0);
-            while (isalpha(*p))
+            while (is_alpha_digit(*p))
                 p++;
             cur->len = p - q;
             continue;
