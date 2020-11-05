@@ -1,6 +1,10 @@
 typedef enum {
     TK_RESERVED,    /* symbols */
     TK_RETURN,      /* return keyword */
+    TK_IF,          /* if keyword */
+    TK_ELSE,        /* else keyword */
+    TK_WHILE,       /* while keyword */
+    TK_FOR,         /* for keyword */
     TK_IDENT,       /* identifier */
     TK_NUM,         /* number */
     TK_EOF,         /* end of file */
@@ -28,6 +32,8 @@ typedef enum {
     ND_ASSIGN,  /* = */
     ND_LVAR,    /* local variable */
     ND_RETURN,  /* return keyword */
+    ND_IF,      /* if keyword */
+    ND_ELSE,    /* else keyword */
     ND_NUM,     /* number */
 } NodeKind;
 
@@ -56,6 +62,7 @@ extern Node *code[100];
 extern LVar *locals;
 
 extern Token *tokenize(void);
+extern void show_token(void);
 extern void *program();
 extern int count_lvar(void);
 

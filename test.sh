@@ -109,4 +109,10 @@ assert 1 "_Foo = 1;"
 assert 5 "Bar_ = 2+3;"
 assert 8 "foo_bar = 3+5;"
 assert 13 "fn1=5; fn2=3+5; return (fn1+fn2);"
+
+assert 20 "a = 10; if (1) a = 20; return a;"
+assert 10 "a = 10; if (0) a = 20; return a;"
+assert 200 "a = 20; if (1) a = a * 10; else a = a / 10; return a;"
+assert 2 "a = 20; if (0) a = a * 10; else a = a / 10; return a;"
+
 echo OK

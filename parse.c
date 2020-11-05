@@ -108,12 +108,65 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, int len)
     return tok;
 }
 
+
+typedef struct Keyword Keyword;
+
+struct Keyword {
+    TokenKind   kind;
+    char        *str;
+    int         len;
+};
+
+#define entry(kind, literal)    { (kind), (literal), strlen(literal) }
+
+Keyword keywords[] = {
+    entry(TK_RETURN, "return"),
+    entry(TK_IF,     "if"),
+    entry(TK_ELSE,   "else"),
+    entry(TK_WHILE,  "while"),
+    entry(TK_FOR,    "for"),
+    entry(TK_EOF,    ""),
+};
+
+Keyword* find_keyword(char *p)
+{
+    for (Keyword *key = keywords; key->kind != TK_EOF; key++) {
+        if (!strncmp(p, key->str, key->len) && !is_alpha_digit(p[key->len]))
+            return key;
+    }
+    return NULL;
+}
+
+char token_kind_string[][12] = {
+    "TK_RESERVED",
+    "TK_RETURN",
+    "TK_IF",
+    "TK_ELSE",
+    "TK_WHILE",
+    "TK_FOR",
+    "TK_IDENT",
+    "TK_NUM",
+    "TK_EOF",
+};
+
+void show_token(void)
+{
+    for (Token *tok = token; tok; tok = tok->next) {
+        printf("{%s:", token_kind_string[tok->kind]);
+        for (int i = 0; i < tok->len; i++)
+            printf("%c", tok->str[i]);
+        printf("}, ");
+    }
+    printf("\n");
+}
+
 Token *tokenize(void)
 {
     char *p = user_input;
     Token head;
     head.next = NULL;
     Token *cur = &head;
+    Keyword *key;
 
     while (*p) {
         if (isspace(*p)) {
@@ -121,9 +174,10 @@ Token *tokenize(void)
             continue;
         }
 
-        if (!strncmp(p, "return", 6) && !is_alpha_digit(p[6])) {
-            cur = new_token(TK_RETURN, cur, p, 6);
-            p += 6;
+        key = find_keyword(p);
+        if (key) {
+            cur = new_token(key->kind, cur, p, key->len);
+            p += key->len;
             continue;
         }
 
@@ -217,17 +271,31 @@ void *program()
     code[i] = NULL;
 }
 
-/* EBNF: stmt = expr ";" | "return" expr ";"
+/* EBNF: stmt = expr ";"
+ *            | "return" expr ";"
+ *            | "if" "(" expr ")" stmt ("else" stmt)?
  * pending - parse isolated ';'
  */
 Node *stmt()
 {
     Node *node;
 
-    if (consume_keyword(TK_RETURN))
+    if (consume_keyword(TK_RETURN)) {
         node = new_binary(ND_RETURN, expr(), NULL);
-    else
+    } else if (consume_keyword(TK_IF)) {
+        expect("(");
+        Node *ex = expr();
+        expect(")");
+        Node *st = stmt();
+        if (consume_keyword(TK_ELSE)) {
+            node = new_binary(ND_ELSE, st, stmt());
+            return new_binary(ND_IF, ex, node);
+        } else {
+            return new_binary(ND_IF, ex, st);
+        }
+    } else {
         node = expr();
+    }
 
     expect(";");
     return node;
