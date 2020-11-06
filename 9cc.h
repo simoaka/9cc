@@ -34,6 +34,7 @@ typedef enum {
     ND_RETURN,  /* return keyword */
     ND_IF,      /* if keyword */
     ND_ELSE,    /* else keyword */
+    ND_WHILE,   /* while keyword */
     ND_NUM,     /* number */
 } NodeKind;
 

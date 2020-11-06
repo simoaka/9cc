@@ -115,4 +115,8 @@ assert 10 "a = 10; if (0) a = 20; return a;"
 assert 200 "a = 20; if (1) a = a * 10; else a = a / 10; return a;"
 assert 2 "a = 20; if (0) a = a * 10; else a = a / 10; return a;"
 
+assert 0 "a = 5; while (a > 0) a = a - 1; return a;"
+assert 128 "a = 1; while (a < 128) a = a * 2; return a;"
+assert 1 "a = 1; while (a != 1) a = 10; return a;"
+
 echo OK

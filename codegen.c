@@ -11,6 +11,7 @@ void gen_lval(Node *node)
     printf("  push rax\n");
 }
 
+static unsigned int lbegin_number = 1;
 static unsigned int lend_number = 1;
 static unsigned int lelse_number = 1;
 
@@ -45,25 +46,38 @@ void gen(Node *node)
         return;
     case ND_IF:
         if (node->rhs->kind == ND_ELSE) {
-            int m = lelse_number++;
-            int n = lend_number++;
+            unsigned int m = lelse_number++;
+            unsigned int n = lend_number++;
             gen(node->lhs);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
-            printf("  je  .Lelse%d\n", m);
+            printf("  je  .Lelse%u\n", m);
             gen(node->rhs->lhs);
-            printf("  jmp .Lend%d\n", n);
-            printf(".Lelse%d:\n", m);
+            printf("  jmp .Lend%u\n", n);
+            printf(".Lelse%u:\n", m);
             gen(node->rhs->rhs);
-            printf(".Lend%d:\n", n);
+            printf(".Lend%u:\n", n);
         } else {
-            int n = lend_number++;
+            unsigned int n = lend_number++;
             gen(node->lhs);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
-            printf("  je  .Lend%d\n", n);
+            printf("  je  .Lend%u\n", n);
             gen(node->rhs);
-            printf(".Lend%d:\n", n);
+            printf(".Lend%u:\n", n);
+        }
+        return;
+    case ND_WHILE: {
+        unsigned int m = lbegin_number++;
+        unsigned int n = lend_number++;
+        printf(".Lbegin%u:\n", m);
+        gen(node->lhs);
+        printf("  pop rax\n");
+        printf("  cmp rax, 0\n");
+        printf("  je  .Lend%u\n", n);
+        gen(node->rhs);
+        printf("  jmp .Lbegin%u\n", m);
+        printf(".Lend%u:\n", n);
         }
         return;
     }

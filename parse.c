@@ -274,6 +274,7 @@ void *program()
 /* EBNF: stmt = expr ";"
  *            | "return" expr ";"
  *            | "if" "(" expr ")" stmt ("else" stmt)?
+ *            | "while" "(" expr ")" stmt
  * pending - parse isolated ';'
  */
 Node *stmt()
@@ -293,6 +294,11 @@ Node *stmt()
         } else {
             return new_binary(ND_IF, ex, st);
         }
+    } else if (consume_keyword(TK_WHILE)) {
+        expect("(");
+        Node *ex = expr();
+        expect(")");
+        return new_binary(ND_WHILE, ex, stmt());
     } else {
         node = expr();
     }
