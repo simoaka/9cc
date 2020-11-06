@@ -35,6 +35,9 @@ typedef enum {
     ND_IF,      /* if keyword */
     ND_ELSE,    /* else keyword */
     ND_WHILE,   /* while keyword */
+    ND_FOR,     /* for keyword (statement). */
+    ND_FOR1,    /* for keyword (initialize). */
+    ND_FOR2,    /* for keyword (condition). */
     ND_NUM,     /* number */
 } NodeKind;
 

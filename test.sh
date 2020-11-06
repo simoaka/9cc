@@ -115,8 +115,16 @@ assert 10 "a = 10; if (0) a = 20; return a;"
 assert 200 "a = 20; if (1) a = a * 10; else a = a / 10; return a;"
 assert 2 "a = 20; if (0) a = a * 10; else a = a / 10; return a;"
 
-assert 0 "a = 5; while (a > 0) a = a - 1; return a;"
-assert 128 "a = 1; while (a < 128) a = a * 2; return a;"
-assert 1 "a = 1; while (a != 1) a = 10; return a;"
+assert 0  "a = 5; while (a > 0) a = a - 1; return a;"
+assert 64 "a = 1; while (a < 64) a = a * 2; return a;"
+assert 1  "a = 1; while (a != 1) a = 10; return a;"
+assert 10 "a=0; while (1) if (a < 10) a=a+1; else return a;"
+
+assert 10 "for (a=0; a<10; a=a+1) 0; return a;"
+assert 10 "for (a=0; a<10; ) a=a+1; return a;"
+assert 10 "a=0; for (; a<10; a=a+1) 0; return a;"
+assert 10 "a=0; for (; a<10; ) a=a+1; return a;"
+assert 10 "a=10; for (; a<10; ) a=a+1; return a;"
+assert 10 "a=0; for (;;) if (a < 10) a=a+1; else return a;"
 
 echo OK

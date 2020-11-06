@@ -80,6 +80,21 @@ void gen(Node *node)
         printf(".Lend%u:\n", n);
         }
         return;
+    case ND_FOR: {
+        unsigned int m = lbegin_number++;
+        unsigned int n = lend_number++;
+        gen(node->lhs->lhs);
+        printf(".Lbegin%u:\n", m);
+        gen(node->lhs->rhs);
+        printf("  pop rax\n");
+        printf("  cmp rax, 0\n");
+        printf("  je  .Lend%u\n", n);
+        gen(node->rhs->rhs);
+        gen(node->rhs->lhs);
+        printf("  jmp .Lbegin%u\n", m);
+        printf(".Lend%u:\n", n);
+        }
+        return;
     }
 
     gen(node->lhs);

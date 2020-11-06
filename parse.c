@@ -275,6 +275,7 @@ void *program()
  *            | "return" expr ";"
  *            | "if" "(" expr ")" stmt ("else" stmt)?
  *            | "while" "(" expr ")" stmt
+ *            | "for" "(" expr? ";" expr? ; expr? ")" stmt
  * pending - parse isolated ';'
  */
 Node *stmt()
@@ -299,6 +300,35 @@ Node *stmt()
         Node *ex = expr();
         expect(")");
         return new_binary(ND_WHILE, ex, stmt());
+    } else if (consume_keyword(TK_FOR)) {
+        Node *ini, *cnd, *nxt;
+        ini = cnd = nxt = NULL;
+
+        expect("(");
+        if (!consume(";")) {
+            ini = expr();
+            expect(";");
+        } else {
+            ini = new_num(1);
+        }
+
+        if (!consume(";")) {
+            cnd = expr();
+            expect(";");
+        } else {
+            cnd = new_num(1);
+        }
+
+        if (!consume(")")) {
+            nxt = expr();
+            expect(")");
+        } else {
+            nxt = new_num(1);
+        }
+
+        return new_binary(ND_FOR,
+            new_binary(ND_FOR1, ini, cnd),
+            new_binary(ND_FOR2, nxt, stmt()));
     } else {
         node = expr();
     }
