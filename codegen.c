@@ -78,8 +78,8 @@ void gen(Node *node)
         gen(node->rhs);
         printf("  jmp .Lbegin%u\n", m);
         printf(".Lend%u:\n", n);
-        }
         return;
+    }
     case ND_FOR: {
         unsigned int m = lbegin_number++;
         unsigned int n = lend_number++;
@@ -93,8 +93,8 @@ void gen(Node *node)
         gen(node->rhs->lhs);
         printf("  jmp .Lbegin%u\n", m);
         printf(".Lend%u:\n", n);
-        }
         return;
+    }
     case ND_BLOCK: {
         Vector *vector = node->vector;
         Node *p;
@@ -102,8 +102,8 @@ void gen(Node *node)
             gen(p);
             printf("  pop rax\n");
         }
-        }
         return;
+    }
     }
 
     gen(node->lhs);
