@@ -1,3 +1,19 @@
+typedef struct Element Element;
+
+struct Element {
+    Element     *next;
+    void        *data;
+};
+
+typedef struct Vector Vector;
+struct Vector {
+    Element     *head;
+    Element     *tail;
+};
+
+void enque(Vector *list, void *data);
+void * deque(Vector *list);
+
 typedef enum {
     TK_RESERVED,    /* symbols */
     TK_RETURN,      /* return keyword */
@@ -38,6 +54,7 @@ typedef enum {
     ND_FOR,     /* for keyword (statement). */
     ND_FOR1,    /* for keyword (initialize). */
     ND_FOR2,    /* for keyword (condition). */
+    ND_BLOCK,   /* { ... } */
     ND_NUM,     /* number */
 } NodeKind;
 
@@ -47,6 +64,7 @@ struct Node {
     NodeKind    kind; /* kine of token */
     Node        *lhs; /* left hand side */
     Node        *rhs; /* right hand side */
+    Vector      *vector; /* used when kind = ND_BLOCK */
     int         val;  /* it will be used when kind is number */
     int         offset; /* it will be used when kind is local variable */
 };

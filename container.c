@@ -26,3 +26,24 @@ void error_at(char *loc, char *fmt, ...)
     exit(1);
 }
 
+void enque(Vector *vector, void *data)
+{
+    Element *e = calloc(1, sizeof(Element));
+    e->data = data;
+
+    if (vector->tail)
+        vector->tail->next = e;
+    else
+        vector->head = e;
+    vector->tail = e;
+}
+
+void * deque(Vector *vector)
+{
+    if (!vector->head)
+        return NULL;
+
+    void *data = vector->head->data;
+    vector->head = vector->head->next;
+    return data;
+}

@@ -190,7 +190,7 @@ Token *tokenize(void)
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
             *p == '(' || *p == ')' || *p == '<' || *p == '>' ||
-            *p == '=' || *p == ';') {
+            *p == '=' || *p == ';' || *p == '{' || *p == '}') {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -243,6 +243,14 @@ static Node *new_num(int val)
     return node;
 }
 
+/* new node of vector */
+static Node *new_vector(Vector *vector)
+{
+    Node *node = new_node(ND_BLOCK);
+    node->vector = vector;
+    return node;
+}
+
 /* 1. == !=
  * 2. < <= > >=
  * 3. + -
@@ -272,6 +280,7 @@ void *program()
 }
 
 /* EBNF: stmt = expr ";"
+ *            | "{" stmt* "}"
  *            | "return" expr ";"
  *            | "if" "(" expr ")" stmt ("else" stmt)?
  *            | "while" "(" expr ")" stmt
@@ -329,6 +338,11 @@ Node *stmt()
         return new_binary(ND_FOR,
             new_binary(ND_FOR1, ini, cnd),
             new_binary(ND_FOR2, nxt, stmt()));
+    } else if (consume("{")) {
+        Vector *vec = calloc(1, sizeof(Vector));
+        while (!consume("}"))
+            enque(vec, stmt());
+        return new_vector(vec);
     } else {
         node = expr();
     }

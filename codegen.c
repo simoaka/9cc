@@ -95,6 +95,15 @@ void gen(Node *node)
         printf(".Lend%u:\n", n);
         }
         return;
+    case ND_BLOCK: {
+        Vector *vector = node->vector;
+        Node *p;
+        while ((p = deque(vector)) != NULL) {
+            gen(p);
+            printf("  pop rax\n");
+        }
+        }
+        return;
     }
 
     gen(node->lhs);

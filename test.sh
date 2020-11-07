@@ -127,4 +127,9 @@ assert 10 "a=0; for (; a<10; ) a=a+1; return a;"
 assert 10 "a=10; for (; a<10; ) a=a+1; return a;"
 assert 10 "a=0; for (;;) if (a < 10) a=a+1; else return a;"
 
+assert 3 "{a=1;b=2;return(a+b);}"
+assert 20 "a = 10; b = 20; if (1) { tmp = a; a = b; b = tmp; } return a;"
+assert 39 "a = 390; b = 273; r = a; while (r) { q = a / b; r = a - b * q; a = b; b = r; } return a;"
+assert 55 "result = 0; m = 0; n = 1; for (i = 1; i <= 10; i=i+1) { result = m+n; n=m; m=result; } return result;"
+
 echo OK
