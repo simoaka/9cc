@@ -55,6 +55,7 @@ typedef enum {
     ND_FOR1,    /* for keyword (initialize). */
     ND_FOR2,    /* for keyword (condition). */
     ND_BLOCK,   /* { ... } */
+    ND_FUNC,    /* foo() */
     ND_NUM,     /* number */
 } NodeKind;
 
@@ -66,6 +67,8 @@ struct Node {
     Node        *rhs; /* right hand side */
     Vector      *vector; /* used when kind = ND_BLOCK */
     int         val;  /* it will be used when kind is number */
+    char        *func;  /* used when kind == ND_FUNC */
+    int         len;    /* length of function */
     int         offset; /* it will be used when kind is local variable */
 };
 

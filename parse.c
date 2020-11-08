@@ -442,7 +442,10 @@ static Node *unary()
         return primary();
 }
 
-/* EBNF: primary = num | "(" expr ")" */
+/* EBNF: primary = num
+ *               | ident ("(" ")")?
+ *               | "(" expr ")"
+ */
 static Node *primary()
 {
     /* if next token is "(", expression will be expanded. */
@@ -455,19 +458,25 @@ static Node *primary()
     Token *tok = consume_ident();
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-
-        LVar *lvar = find_lvar(tok);
-        if (lvar) {
-            node->offset = lvar->offset;
+        if (consume("(")) {
+            expect(")");
+            node->kind = ND_FUNC;
+            node->func = tok->str;
+            node->len = tok->len;
         } else {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->len = tok->len;
-            lvar->offset = (locals) ? (locals->offset + 8) : 0;
-            node->offset = lvar->offset;
-            locals = lvar;
+            node->kind = ND_LVAR;
+            LVar *lvar = find_lvar(tok);
+            if (lvar) {
+                node->offset = lvar->offset;
+            } else {
+                lvar = calloc(1, sizeof(LVar));
+                lvar->next = locals;
+                lvar->name = tok->str;
+                lvar->len = tok->len;
+                lvar->offset = (locals) ? (locals->offset + 8) : 0;
+                node->offset = lvar->offset;
+                locals = lvar;
+            }
         }
         return node;
     }

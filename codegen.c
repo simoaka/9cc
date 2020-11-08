@@ -104,6 +104,12 @@ void gen(Node *node)
         }
         return;
     }
+    case ND_FUNC:
+        printf("  call ");
+        for (int i = 0; i < node->len; i++)
+            printf("%c", node->func[i]);
+        printf("\n");
+        return;
     }
 
     gen(node->lhs);
